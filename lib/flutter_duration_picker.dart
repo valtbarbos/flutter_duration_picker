@@ -25,12 +25,6 @@ const double _kCircleTop = _kPiByTwo;
 //const double _kCircleRightComplete = _kTwoPi;
 //const double _kCircleLeft = math.pi;
 
-class DialLimiter {
-  int hour;
-  int minute;
-  DialLimiter({this.hour, this.minute});
-}
-
 class _DialPainter extends CustomPainter {
   const _DialPainter({
     @required this.context,
@@ -45,10 +39,8 @@ class _DialPainter extends CustomPainter {
     @required this.minuteHand,
     @required this.textDurationTextStyle,
     @required this.textMinTextStyle,
-    this.limiter,
   });
 
-  final DialLimiter limiter;
   final List<TextPainter> labels;
   final Color backgroundColor;
   final Color accentColor;
@@ -64,29 +56,6 @@ class _DialPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    int _multiplier = multiplier;
-
-    int _minuteHand = minuteHand;
-
-    bool _limited = false;
-
-    final DialLimiter _limiter = DialLimiter(hour: 1, minute: 0);
-
-    if (multiplier > _limiter.hour) {
-      _multiplier = _limiter.hour;
-      _limited = true;
-    }
-
-    if (multiplier >= _limiter.hour && minuteHand > _limiter.minute) {
-      _minuteHand = _limiter.minute;
-      _limited = true;
-    }
-    // if (limiter != null) {
-    //   if (limiter > Duration(hours: multiplier, minutes: minuteHand)) {
-    //     return;
-    //   }
-    // }
-
     const double _epsilon = .001;
     const double _sweep = _kTwoPi - _epsilon;
     const double _startAngle = -math.pi / 2.0;
@@ -119,10 +88,10 @@ class _DialPainter extends CustomPainter {
     canvas.drawCircle(handlePoint, 20.0, handlePaint);
 
     // Draw the Text in the center of the circle which displays hours and mins
-    String hours = (_multiplier == 0) ? '' : "${_multiplier}h ";
+    String hours = (multiplier == 0) ? '' : "${multiplier}h ";
 //    int minutes = (pctTheta * 60).round();
 //    minutes = minutes == 60 ? 0 : minutes;
-    String minutes = "$_minuteHand";
+    String minutes = "$minuteHand";
 
     TextPainter textDurationValuePainter = new TextPainter(
         textAlign: TextAlign.center,
@@ -133,7 +102,6 @@ class _DialPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr)
       ..layout();
-
     Offset middleForValueText = new Offset(centerPoint.dx - (textDurationValuePainter.width / 2), centerPoint.dy - textDurationValuePainter.height / 2);
     textDurationValuePainter.paint(canvas, middleForValueText);
 
@@ -145,7 +113,6 @@ class _DialPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr)
       ..layout();
-
     textMinPainter.paint(
         canvas, new Offset(centerPoint.dx - (textMinPainter.width / 2), centerPoint.dy + (textDurationValuePainter.height / 2) - textMinPainter.height / 2));
 
@@ -159,7 +126,7 @@ class _DialPainter extends CustomPainter {
 
     Rect rect = Rect.fromCircle(center: centerPoint, radius: radius - radius * 0.12 / 2);
     double sweepAngle = _sweep * pctTheta;
-    canvas.drawArc(rect, _startAngle, _multiplier > 0 ? 7 : sweepAngle, false, elapsedPainter);
+    canvas.drawArc(rect, _startAngle, multiplier > 0 ? 7 : sweepAngle, false, elapsedPainter);
 
     // Paint the labels (the minute strings)
     void paintLabels(List<TextPainter> labels) {
@@ -176,9 +143,7 @@ class _DialPainter extends CustomPainter {
       }
     }
 
-    if (!_limited) {
-      paintLabels(labels);
-    }
+    paintLabels(labels);
   }
 
   @override
@@ -198,6 +163,7 @@ class _Dial extends StatefulWidget {
     this.minuteMarkerTextStyle,
     this.snapToMins = 1.0,
     this.accentColor,
+    this.limiter,
   }) : assert(duration != null);
 
   final Duration duration;
@@ -208,6 +174,7 @@ class _Dial extends StatefulWidget {
   final TextStyle textDurationTextStyle;
   final TextStyle textMinTextStyle;
   final Color accentColor;
+  final DialLimiter limiter;
 
   /// The resolution of mins of the dial, i.e. if snapToMins = 5.0, only durations of 5min intervals will be selectable.
   final double snapToMins;
@@ -421,15 +388,30 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
     // increasing counter clock wise.
 
     // From positive to negative (in mathematical COS)
+    double _newTurningAngle;
+
     if (newTheta > 1.5 * math.pi && oldTheta < 0.5 * math.pi) {
-      _turningAngle = _turningAngle - ((_kTwoPi - newTheta) + oldTheta);
+      _newTurningAngle = _turningAngle - ((_kTwoPi - newTheta) + oldTheta);
     }
     // From negative to positive (in mathematical COS)
     else if (newTheta < 0.5 * math.pi && oldTheta > 1.5 * math.pi) {
-      _turningAngle = _turningAngle + ((_kTwoPi - oldTheta) + newTheta);
+      _newTurningAngle = _turningAngle + ((_kTwoPi - oldTheta) + newTheta);
     } else {
-      _turningAngle = _turningAngle + (newTheta - oldTheta);
+      _newTurningAngle = _turningAngle + (newTheta - oldTheta);
     }
+
+    if (widget.limiter != null) {
+      _hours = _hourHand(_newTurningAngle);
+      _minutes = _minuteHand(_newTurningAngle);
+      if (_hours > widget.limiter.hour) {
+        return;
+      }
+      if (_hours >= widget.limiter.hour && _minutes > widget.limiter.minute) {
+        return;
+      }
+    }
+
+    _turningAngle = _newTurningAngle;
   }
 
   void _handlePanEnd(DragEndDetails details) {
@@ -500,28 +482,35 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
     _minutes = _minuteHand(_turningAngle);
 
     return new GestureDetector(
-        excludeFromSemantics: true,
-        onPanStart: _handlePanStart,
-        onPanUpdate: _handlePanUpdate,
-        onPanEnd: _handlePanEnd,
-        onTapUp: _handleTapUp,
-        child: new CustomPaint(
-          painter: new _DialPainter(
-            pct: _pct,
-            multiplier: _hours,
-            minuteHand: _minutes,
-            context: context,
-            selectedValue: selectedDialValue,
-            labels: widget.minuteMarker ? _buildMinutes(theme.textTheme) : null,
-            textDurationTextStyle: widget.textDurationTextStyle,
-            textMinTextStyle: widget.textMinTextStyle,
-            backgroundColor: widget.backgroundColor,
-            accentColor: widget.accentColor ?? themeData.accentColor,
-            theta: _theta.value,
-            textDirection: Directionality.of(context),
-          ),
-        ));
+      excludeFromSemantics: true,
+      onPanStart: _handlePanStart,
+      onPanUpdate: _handlePanUpdate,
+      onPanEnd: _handlePanEnd,
+      onTapUp: _handleTapUp,
+      child: new CustomPaint(
+        painter: new _DialPainter(
+          pct: _pct,
+          multiplier: _hours,
+          minuteHand: _minutes,
+          context: context,
+          selectedValue: selectedDialValue,
+          labels: widget.minuteMarker ? _buildMinutes(theme.textTheme) : null,
+          textDurationTextStyle: widget.textDurationTextStyle,
+          textMinTextStyle: widget.textMinTextStyle,
+          backgroundColor: widget.backgroundColor,
+          accentColor: widget.accentColor ?? themeData.accentColor,
+          theta: _theta.value,
+          textDirection: Directionality.of(context),
+        ),
+      ),
+    );
   }
+}
+
+class DialLimiter {
+  int hour;
+  int minute;
+  DialLimiter({this.hour, this.minute});
 }
 
 /// A duration picker designed to appear inside a popup dialog.
@@ -686,6 +675,7 @@ class DurationPicker extends StatelessWidget {
   final TextStyle minuteMarkerTextStyle;
   final TextStyle textDurationTextStyle;
   final TextStyle textMinTextStyle;
+  final DialLimiter limiter;
 
   DurationPicker({
     @required this.onChange,
@@ -699,6 +689,7 @@ class DurationPicker extends StatelessWidget {
     this.accentColor,
     this.minuteMarker = true,
     this.minuteMarkerTextStyle,
+    this.limiter,
   });
 
   @override
@@ -709,6 +700,7 @@ class DurationPicker extends StatelessWidget {
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: <Widget>[
           Expanded(
             child: _Dial(
+              limiter: limiter,
               duration: duration,
               textDurationTextStyle: textDurationTextStyle,
               textMinTextStyle: textMinTextStyle,

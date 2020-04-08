@@ -36,6 +36,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: new Center(
         child: DurationPicker(
+          limiter: DialLimiter(hour: 1, minute: 3),
           duration: _duration,
           textDurationTextStyle: Theme.of(context).textTheme.display3.copyWith(fontSize: 40, color: Colors.white),
           textMinTextStyle: Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
