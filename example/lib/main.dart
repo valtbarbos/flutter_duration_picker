@@ -30,22 +30,22 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
+      backgroundColor: Colors.black12,
       appBar: new AppBar(
         title: new Text(widget.title),
       ),
       body: new Center(
-        child: new Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            new Expanded(
-                child: DurationPicker(
-              duration: _duration,
-              onChange: (val) {
-                this.setState(() => _duration = val);
-              },
-              snapToMins: 5.0,
-            ))
-          ],
+        child: DurationPicker(
+          duration: _duration,
+          textDurationTextStyle: Theme.of(context).textTheme.display3.copyWith(fontSize: 40, color: Colors.white),
+          textMinTextStyle: Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
+          backgroundColor: Colors.black,
+          accentColor: Colors.white,
+          minuteMarker: false,
+          onChange: (val) {
+            this.setState(() => _duration = val);
+          },
+          snapToMins: 5.0,
         ),
       ),
       floatingActionButton: Builder(
@@ -55,8 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     context: context,
                     initialTime: new Duration(minutes: 30),
                   );
-                  Scaffold.of(context).showSnackBar(new SnackBar(
-                      content: new Text("Chose duration: $resultingDuration")));
+                  Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("Chose duration: $resultingDuration")));
                 },
                 tooltip: 'Popup Duration Picker',
                 child: new Icon(Icons.add),
