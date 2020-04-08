@@ -39,6 +39,9 @@ class _DialPainter extends CustomPainter {
     @required this.minuteHand,
     @required this.textDurationTextStyle,
     @required this.textMinTextStyle,
+    this.strokeWidth,
+    this.enableCircleBrush = false,
+    this.circleBrushColor,
   });
 
   final List<TextPainter> labels;
@@ -53,6 +56,9 @@ class _DialPainter extends CustomPainter {
   final int minuteHand;
   final TextStyle textDurationTextStyle;
   final TextStyle textMinTextStyle;
+  final double strokeWidth;
+  final bool enableCircleBrush;
+  final Color circleBrushColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -66,6 +72,20 @@ class _DialPainter extends CustomPainter {
 
     double pctTheta = (0.25 - (theta % _kTwoPi) / _kTwoPi) % 1.0;
 
+    // final Paint circleBrush = Paint()
+    //   ..strokeWidth = radius * 0.12 //strokeWidth
+    //   ..color = Colors.white //.indigo[400].withOpacity(0.4)
+    //   ..style = PaintingStyle.stroke;
+
+    if (enableCircleBrush) {
+      var circleBrush = new Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..color = circleBrushColor
+        ..isAntiAlias = true
+        ..strokeWidth = strokeWidth ?? radius * 0.12;
+      canvas.drawCircle(center, radius, circleBrush);
+    }
     // // Draw the background outer ring
     // canvas.drawCircle(centerPoint, radius, new Paint()..color = backgroundColor);
 
@@ -84,7 +104,7 @@ class _DialPainter extends CustomPainter {
 
     // Draw the handle that is used to drag and to indicate the position around the circle
     final Paint handlePaint = new Paint()..color = accentColor;
-    final Offset handlePoint = getOffsetForTheta(theta, radius - 10.0);
+    final Offset handlePoint = getOffsetForTheta(theta, radius - (enableCircleBrush ? 0.0 : 10));
     canvas.drawCircle(handlePoint, 20.0, handlePaint);
 
     // Draw the Text in the center of the circle which displays hours and mins
@@ -122,9 +142,9 @@ class _DialPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..color = accentColor.withOpacity(0.3)
       ..isAntiAlias = true
-      ..strokeWidth = radius * 0.12;
+      ..strokeWidth = strokeWidth ?? radius * 0.12;
 
-    Rect rect = Rect.fromCircle(center: centerPoint, radius: radius - radius * 0.12 / 2);
+    Rect rect = Rect.fromCircle(center: centerPoint, radius: radius - (enableCircleBrush ? 0.0 : radius * 0.12 / 2));
     double sweepAngle = _sweep * pctTheta;
     canvas.drawArc(rect, _startAngle, multiplier > 0 ? 7 : sweepAngle, false, elapsedPainter);
 
@@ -164,6 +184,9 @@ class _Dial extends StatefulWidget {
     this.snapToMins = 1.0,
     this.accentColor,
     this.limiter,
+    this.strokeWidth,
+    this.enableCircleBrush = false,
+    this.circleBrushColor,
   }) : assert(duration != null);
 
   final Duration duration;
@@ -175,6 +198,9 @@ class _Dial extends StatefulWidget {
   final TextStyle textMinTextStyle;
   final Color accentColor;
   final DialLimiter limiter;
+  final double strokeWidth;
+  final bool enableCircleBrush;
+  final Color circleBrushColor;
 
   /// The resolution of mins of the dial, i.e. if snapToMins = 5.0, only durations of 5min intervals will be selectable.
   final double snapToMins;
@@ -501,6 +527,9 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
           accentColor: widget.accentColor ?? themeData.accentColor,
           theta: _theta.value,
           textDirection: Directionality.of(context),
+          strokeWidth: widget.strokeWidth,
+          enableCircleBrush: widget.enableCircleBrush,
+          circleBrushColor: widget.circleBrushColor,
         ),
       ),
     );
@@ -676,6 +705,9 @@ class DurationPicker extends StatelessWidget {
   final TextStyle textDurationTextStyle;
   final TextStyle textMinTextStyle;
   final DialLimiter limiter;
+  final double strokeWidth;
+  final bool enableCircleBrush;
+  final Color circleBrushColor;
 
   DurationPicker({
     @required this.onChange,
@@ -690,6 +722,9 @@ class DurationPicker extends StatelessWidget {
     this.minuteMarker = true,
     this.minuteMarkerTextStyle,
     this.limiter,
+    this.strokeWidth,
+    this.enableCircleBrush,
+    this.circleBrushColor,
   });
 
   @override
@@ -710,6 +745,9 @@ class DurationPicker extends StatelessWidget {
               snapToMins: snapToMins,
               backgroundColor: backgroundColor,
               accentColor: accentColor,
+              enableCircleBrush: enableCircleBrush,
+              circleBrushColor: circleBrushColor,
+              strokeWidth: strokeWidth,
             ),
           ),
         ]));

@@ -41,8 +41,11 @@ class _MyHomePageState extends State<MyHomePage> {
           textDurationTextStyle: Theme.of(context).textTheme.display3.copyWith(fontSize: 50, color: Colors.white),
           textMinTextStyle: Theme.of(context).textTheme.display3.copyWith(fontSize: 25, color: Colors.white),
           backgroundColor: Colors.black,
-          accentColor: Colors.white,
+          accentColor: Colors.red,
           minuteMarker: false,
+          enableCircleBrush: false,
+          circleBrushColor: Colors.white60,
+          strokeWidth: 10,
           onChange: (val) {
             this.setState(() => _duration = val);
           },
