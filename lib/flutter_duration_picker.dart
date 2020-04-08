@@ -95,14 +95,14 @@ class _DialPainter extends CustomPainter {
 
     TextPainter textDurationValuePainter = new TextPainter(
         textAlign: TextAlign.center,
-        text: new TextSpan(
+        text: TextSpan(
 //            text: '${hours}${minutes > 0 ? minutes : ""}',
           text: '${hours}${minutes}',
           style: textDurationTextStyle ?? Theme.of(context).textTheme.display3.copyWith(fontSize: size.shortestSide * 0.15),
         ),
         textDirection: TextDirection.ltr)
       ..layout();
-    Offset middleForValueText = new Offset(centerPoint.dx - (textDurationValuePainter.width / 2), centerPoint.dy - textDurationValuePainter.height / 2);
+    Offset middleForValueText = new Offset(centerPoint.dx - (textDurationValuePainter.width / 2), centerPoint.dy - textDurationValuePainter.height / 1.25);
     textDurationValuePainter.paint(canvas, middleForValueText);
 
     TextPainter textMinPainter = new TextPainter(
@@ -114,7 +114,7 @@ class _DialPainter extends CustomPainter {
         textDirection: TextDirection.ltr)
       ..layout();
     textMinPainter.paint(
-        canvas, new Offset(centerPoint.dx - (textMinPainter.width / 2), centerPoint.dy + (textDurationValuePainter.height / 2) - textMinPainter.height / 2));
+        canvas, new Offset(centerPoint.dx - (textMinPainter.width / 2), centerPoint.dy + (textDurationValuePainter.height / 2) - textMinPainter.height / 2.5));
 
     // Draw an arc around the circle for the amount of the circle that has elapsed.
     var elapsedPainter = new Paint()
@@ -510,7 +510,7 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
 class DialLimiter {
   int hour;
   int minute;
-  DialLimiter({this.hour, this.minute});
+  DialLimiter({this.hour, this.minute = 0});
 }
 
 /// A duration picker designed to appear inside a popup dialog.

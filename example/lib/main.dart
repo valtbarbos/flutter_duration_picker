@@ -38,8 +38,8 @@ class _MyHomePageState extends State<MyHomePage> {
         child: DurationPicker(
           limiter: DialLimiter(hour: 1, minute: 3),
           duration: _duration,
-          textDurationTextStyle: Theme.of(context).textTheme.display3.copyWith(fontSize: 40, color: Colors.white),
-          textMinTextStyle: Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
+          textDurationTextStyle: Theme.of(context).textTheme.display3.copyWith(fontSize: 50, color: Colors.white),
+          textMinTextStyle: Theme.of(context).textTheme.display3.copyWith(fontSize: 25, color: Colors.white),
           backgroundColor: Colors.black,
           accentColor: Colors.white,
           minuteMarker: false,
